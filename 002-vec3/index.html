@@ -1,0 +1,126 @@
+<!doctype html>
+<html>
+    <head>
+        <title>RTIAW</title>
+        <meta charset="utf-8" />
+    <style>
+      c { position: absolute; }
+      html,
+      body {
+        width: 800;
+        height: 100%;
+        margin: 5;
+      }
+      c {
+        width: 100%;
+        height: 600;
+      }
+    </style>
+    </head>
+    <body>
+        <canvas id="c" width="800" height="600"></canvas>
+        <script>
+            var a = document.getElementsByTagName('canvas')[0];
+            var c = a.getContext('2d');
+
+            // ripped from https://raw.githubusercontent.com/mhintz/vec3.js/master/vec3.js
+
+            class Vec3 {
+              constructor(x, y, z) {
+                this.x = x || 0;
+                this.y = y || 0;
+                this.z = z || 0;
+              }
+
+              add(v) {
+                this.x += v.x;
+                this.y += v.y;
+                this.z += v.z;
+                return this;
+              }
+
+              sub(v) {
+                this.x -= v.x;
+                this.y -= v.y;
+                this.z -= v.z;
+                return this;
+              }
+
+              scale(s) {
+                this.x *= s;
+                this.y *= s;
+                this.z *= s;
+                return this;
+              }
+
+              negate() {
+                this.x *= -1;
+                this.y *= -1;
+                this.z *= -1;
+              }
+
+              zero() {
+                this.x = this.y = this.z = 0;
+              }
+
+              normalize() {
+                var m = this.mag();
+                this.x /= m;
+                this.y /= m;
+                this.z /= m;
+                return this;
+              }
+
+              mag() {
+                var x = this.x,
+                    y = this.y,
+                    z = this.z;
+                return Math.sqrt(x * x + y * y + z * z);
+              }
+
+              dot(v) {
+                return this.x * v.x + this.y * v.y + this.z * v.z;
+              }
+
+              negated() {
+                return new Vec3(- this.x, - this.y, - this.z);
+              }
+
+              normalized() {
+                var m = this.mag();
+                return new Vec3(this.x / m, this.y / m, this.z / m);
+              }
+
+              static sum(va, vb) {
+                return new Vec3(va.x + vb.x, va.y + vb.y, va.z + vb.z);
+              }
+
+              static diff(va, vb) {
+                return new Vec3(va.x - vb.x, va.y - vb.y, va.z + vb.z);
+              }
+
+              // static dot product a * b
+              static dotProduct(va, vb) {
+                return va.x * vb.x + va.y * vb.y + va.z * vb.z;
+              }
+
+              // cross product a X b
+              static crossProduct(va, vb) {
+                var ax = va.x, ay = va.y, az = va.z,
+                    bx = vb.x, by = vb.y, bz = vb.z;
+                return new Vec3(ay * bz - az * by, az * bx - ax * bz, ax * by - ay * bx);
+              }
+
+              // distance from a to b
+              static dist(va, vb) {
+                var dx = vb.x - va.x,
+                    dy = vb.y - va.y,
+                    dz = vb.z - va.z;
+                return Math.sqrt(dx * dx + dy * dy + dz * dz);
+              }
+            }
+
+        </script>
+        <script src="index.js"></script>
+    </body>
+</html>
