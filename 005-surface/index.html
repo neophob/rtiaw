@@ -1,0 +1,182 @@
+<!doctype html>
+<html>
+    <head>
+        <title>RTIAW</title>
+        <meta charset="utf-8" />
+    <style>
+      c { position: absolute; }
+      html,
+      body {
+        width: 800;
+        height: 100%;
+        margin: 5;
+      }
+      c {
+        width: 100%;
+        height: 600;
+      }
+    </style>
+    </head>
+    <body>
+        <canvas id="c" width="800" height="600"></canvas>
+        <script>
+            var a = document.getElementsByTagName('canvas')[0];
+            var c = a.getContext('2d');
+
+            class Hitable {
+              constructor() {}
+
+              hit(ray, tmin, tmax, rec) {
+                throw new Error('NOT IMPLEMENTED');
+              }
+            }
+
+            class HitableList extends Hitable {
+              constructor() {
+                super();
+                this.entries = new Set();
+              }
+
+              add(entry) {
+                console.log('add ', entry)
+                this.entries.add(entry);
+              }
+
+              hit(ray, tmin, tmax) {
+                let hitAnything = false;
+                let closestSoFar = tmax;
+                this.entries.forEach((entry) => {
+                  const result = entry.hit(ray, tmin, closestSoFar);
+                  if (result) {
+                    hitAnything = result;
+                    closestSoFar = result.t;
+                  }
+                });
+                return hitAnything;
+              }
+            }
+
+            class Sphere extends Hitable {
+              constructor(vec3Center, radius) {
+                super();
+                this.vec3Center = vec3Center;
+                this.radius = radius;
+              }
+
+              hit(ray, tmin, tmax) {
+                const oc = ray.origin.sub(this.vec3Center);
+                const a = ray.direction.dot(ray.direction);
+                const b = oc.dot(ray.direction);
+                const c = oc.dot(oc) - this.radius * this.radius;
+                const discriminant = b * b - a * c;
+                if (discriminant > 0) {
+                  let temp = (-b - Math.sqrt(discriminant)) / a;
+                  if (temp < tmax && temp > tmin) {
+                    const p = ray.pointAtParameter(temp);
+                    return {
+                      t: temp,
+                      p,
+                      normal: p
+                        .sub(this.vec3Center)
+                        .div(this.radius),
+                    }
+                  }
+                  temp = (-b + Math.sqrt(discriminant)) / a;
+                  if (temp < tmax && temp > tmin) {
+                    const p = ray.pointAtParameter(temp);
+                    return {
+                      t: temp,
+                      p,
+                      normal: p
+                        .sub(this.vec3Center)
+                        .div(this.radius),
+                    }
+                  }
+                }
+                return false;
+              }
+            }
+
+            class Vec3 {
+              constructor(x = 0, y = 0, z = 0) {
+                this.x = x;
+                this.y = y;
+                this.z = z;
+              }
+
+              mul(t) {
+                return new Vec3(
+                  this.x * t,
+                  this.y * t,
+                  this.z * t
+                );
+              }
+
+              add(vec3) {
+                return new Vec3(
+                  this.x + vec3.x,
+                  this.y + vec3.y,
+                  this.z + vec3.z
+                );
+              }
+
+              sub(vec3) {
+                return new Vec3(
+                  this.x - vec3.x,
+                  this.y - vec3.y,
+                  this.z - vec3.z
+                );
+              }
+
+              dot(vec3) {
+                return this.x * vec3.x + this.y * vec3.y + this.z * vec3.z;
+              }
+
+              div(t) {
+                const k = 1 / t;
+                return new Vec3(
+                  this.x * k,
+                  this.y * k,
+                  this.z * k
+                );
+              }
+
+              length() {
+                return Math.sqrt(
+                  this.x * this.x +
+                  this.y * this.y +
+                  this.z * this.z
+                );
+              }
+
+              unitVector() {
+                return this.div(this.length());
+              }
+            }
+
+            class Ray {
+              constructor(vec3Origin, vec3Direction) {
+                this.origin = vec3Origin;
+                this.direction = vec3Direction;
+              }
+
+              origin() {
+                return this.origin;
+              }
+
+              direction() {
+                return this.direction;
+              }
+
+              pointAtParameter(t) {
+                const directionT = this.direction.mul(t);
+                return this.origin.add(directionT);
+              }
+
+            }
+
+
+        </script>
+        <script src="index.js"></script>
+    </body>
+</html>
