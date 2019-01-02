@@ -29,30 +29,28 @@ function color(ray, hitableList) {
 
 const nx = 800;
 const ny = 400;
+const ns = 80;
 let offset = 0;
-
-const lowerLeftCorner = new Vec3(-2, -1, -1);
-const horizontal = new Vec3(4, 0, 0);
-const vertical = new Vec3(0, 2, 0);
-const origin = new Vec3(0, 0, 0);
 
 const hitableList = new HitableList();
 hitableList.add(new Sphere(new Vec3(0, 0, -1), 0.5));
 hitableList.add(new Sphere(new Vec3(0, -100.5, -1), 100));
 
+const camera = new Camera();
+
 for (let j = ny - 1; j >= 0; j--) {
   for (let i = 0; i < nx; i++) {
-    const u = i / nx;
-    const v = j / ny;
+    let col = new Vec3(0, 0, 0);
 
-    const vecU = horizontal.mul(u);
-    const vecV = vertical.mul(v);
-    const vecUV = vecU.add(vecV);
-    const vecDirection = lowerLeftCorner.add(vecUV);
+    for (let a = 0; a < ns; a++) {
+      const u = (i + Math.random()) / nx;
+      const v = (j + Math.random()) / ny;
+      const ray = camera.getRay(u, v);
+      const p = ray.pointAtParameter(2);
+      col = col.add(color(ray, hitableList));
+    }
 
-    const ray = new Ray(origin, vecDirection);
-    const p = ray.pointAtParameter(2.0);
-    const col = color(ray, hitableList);
+    col = col.div(ns);
 
     image.data[offset    ] = 255.99 * col.x;
     image.data[offset + 1] = 255.99 * col.y;

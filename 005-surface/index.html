@@ -175,6 +175,24 @@
 
             }
 
+            class Camera {
+
+              constructor() {
+                this.lowerLeftCorner = new Vec3(-2, -1, -1);
+                this.horizontal = new Vec3(4, 0, 0);
+                this.vertical = new Vec3(0, 2, 0);
+                this.origin = new Vec3(0, 0, 0);
+              }
+
+              getRay(u, v) {
+                const vecU = this.horizontal.mul(u);
+                const vecV = this.vertical.mul(v);
+                const vecUV = vecU.add(vecV);
+                const vecDirection = this.lowerLeftCorner.add(vecUV);
+                return new Ray(this.origin, vecDirection);
+              }
+            }
+
 
         </script>
         <script src="index.js"></script>
