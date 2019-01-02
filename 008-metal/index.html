@@ -23,17 +23,8 @@
             var a = document.getElementsByTagName('canvas')[0];
             var c = a.getContext('2d');
 
-            class Hitable {
-              constructor() {}
-
-              hit(ray, tmin, tmax) {
-                throw new Error('NOT IMPLEMENTED');
-              }
-            }
-
-            class HitableList extends Hitable {
+            class HitableList {
               constructor() {
-                super();
                 this.entries = new Set();
               }
 
@@ -56,9 +47,8 @@
               }
             }
 
-            class Sphere extends Hitable {
+            class Sphere {
               constructor(vec3Center, radius) {
-                super();
                 this.vec3Center = vec3Center;
                 this.radius = radius;
               }

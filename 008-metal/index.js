@@ -42,9 +42,9 @@ function color(ray, hitableList) {
   return whiteMul.add(blue);
 }
 
-const nx = 800;
-const ny = 400;
-const ns = 80;
+const nx = 800/2;
+const ny = 400/2;
+const ns = 100;
 let offset = 0;
 
 const hitableList = new HitableList();
