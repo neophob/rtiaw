@@ -2,39 +2,26 @@
 
 console.log('hello world');
 const startTs = Date.now();
-
 c.fillStyle = '#0f0';
 c.fillRect(0, 0, 800, 600);
-
 
 const image = c.getImageData(0, 0, a.width, a.height);
 
 const colorWhite = new Vec3(1, 1, 1);
 const colorBlue = new Vec3(0.5, 0.7, 1);
 
-function randomInUnitSphere() {
-  const vec1 = new Vec3(1, 1, 1);
-  let p;
-  do {
-    p = new Vec3(Math.random(), Math.random(), Math.random())
-      .mul(2)
-      .sub(vec1);
-  } while (p.squaredLength() >= 1);
-  return p;
-}
-
-function color(ray, hitableList) {
+function color(ray, hitableList, depth) {
   const hitVec = hitableList.hit(ray, 0.001, Number.MAX_VALUE);
   if (hitVec) {
     //hit, draw sphere
-    const target = hitVec.p
-      .add(hitVec.normal)
-      .add(randomInUnitSphere());
-    const ray2 = new Ray(hitVec.p, target.sub(hitVec.p));
-    return color(ray2, hitableList)
-      .mul(0.5);
+    const material = hitVec.material.scatter(ray, hitVec);
+    if (depth < 50 && material) {
+      return material.attenuation
+        .mulVec(color(material.scattered, hitableList, depth + 1));
+    }
+    return new Vec3(0, 0, 0);
   }
-  //not hit, draw background
+  //ray not hit, draw background
   const unitDirection = ray.direction.unitVector();
   const t = 0.5 * (unitDirection.y + 1);
   const blue = colorBlue.mul(t);
@@ -48,8 +35,26 @@ const ns = 100;
 let offset = 0;
 
 const hitableList = new HitableList();
-hitableList.add(new Sphere(new Vec3(0, 0, -1), 0.5));
-hitableList.add(new Sphere(new Vec3(0, -100.5, -1), 100));
+hitableList.add(
+  new Sphere(
+    new Vec3(0, 0, -1), 0.5, new Lambertian(new Vec3(0.8, 0.3, 0.3))
+  )
+);
+hitableList.add(
+  new Sphere(
+    new Vec3(0, -100.5, -1), 100, new Lambertian(new Vec3(0.8, 0.8, 0.0))
+  )
+);
+hitableList.add(
+  new Sphere(
+    new Vec3(1, 0, -1), 0.5, new Metal(new Vec3(0.8, 0.6, 0.2), 1.0)
+  )
+);
+hitableList.add(
+  new Sphere(
+    new Vec3(-1, 0, -1), 0.5, new Metal(new Vec3(0.8, 0.8, 0.8), 0.3)
+  )
+);
 
 const camera = new Camera();
 
@@ -61,8 +66,8 @@ for (let j = ny - 1; j >= 0; j--) {
       const u = (i + Math.random()) / nx;
       const v = (j + Math.random()) / ny;
       const ray = camera.getRay(u, v);
-      const p = ray.pointAtParameter(2);
-      col = col.add(color(ray, hitableList));
+      //const p = ray.pointAtParameter(2);
+      col = col.add(color(ray, hitableList, 0));
     }
 
     col = col.div(ns);
