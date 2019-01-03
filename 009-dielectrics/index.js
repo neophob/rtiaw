@@ -15,7 +15,7 @@ function color(ray, hitableList, depth) {
   if (hitVec) {
     //hit, draw sphere
     const material = hitVec.material.scatter(ray, hitVec);
-    if (depth < 50 && material && material.ignore !== true) {
+    if (depth < 50 && material) {
       return material.attenuation
         .mulVec(color(material.scattered, hitableList, depth + 1));
     }
@@ -53,6 +53,11 @@ hitableList.add(
 hitableList.add(
   new Sphere(
     new Vec3(-1, 0, -1), 0.5, new Dielectric(1.5)
+  )
+);
+hitableList.add(
+  new Sphere(
+    new Vec3(-1, 0, -1), -0.45, new Dielectric(1.5)
   )
 );
 

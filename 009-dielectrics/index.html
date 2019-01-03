@@ -280,6 +280,12 @@
                 return vec3V.sub(vec3N.mul(dot));
               }
 
+              _schlick(cosine, refIndex) {
+                const r0 = (1 - refIndex) / (1 + refIndex);
+                const r1 = r0 * r0;
+                return r1 + (1 - r1) * Math.pow((1 - cosine), 5);
+              }
+
               _refract(vec3V, vec3N, niOverNt) {
                 const uv = vec3V.unitVector();
                 const dt = uv.dot(vec3N);
@@ -296,28 +302,38 @@
               scatter(rayIn, hitRecord) {
                 let outwardNormal;
                 let niOverNt;
-                if (rayIn.direction.dot(hitRecord.normal) > 0) {
+                let cosine;
+                let reflectProb;
+                const rayDot = rayIn.direction.dot(hitRecord.normal);
+                if (rayDot > 0) {
                   outwardNormal = hitRecord.normal.neg();
                   niOverNt = this.ri;
+                  cosine = this.ri * rayDot / rayIn.direction.length();
                 } else {
                   outwardNormal = hitRecord.normal
                   niOverNt = 1 / this.ri;
+                  cosine = -rayDot / rayIn.direction.length();
                 }
 
                 let scattered;
-                let ignore = false;
+                const reflected = this._reflect(rayIn.direction, hitRecord.normal);
                 const refracted = this._refract(rayIn.direction, outwardNormal, niOverNt);
                 if (refracted) {
-                  scattered = new Ray(hitRecord.p, refracted);
+                  //scattered = new Ray(hitRecord.p, refracted);
+                  reflectProb = this._schlick(cosine, this.ri);
                 } else {
-                  //const reflected = this._reflect(rayIn.direction, hitRecord.normal);
-                  //scattered = new Ray(hitRecord.p, reflected);
-                  ignore = true;
+                  scattered = new Ray(hitRecord.p, reflected);
+                  reflectProb = 1;
+                }
+
+                if (Math.random() < reflectProb) {
+                  scattered = new Ray(hitRecord.p, reflected);
+                } else {
+                  scattered = new Ray(hitRecord.p, refracted);
                 }
 
                 return {
                   scattered,
-                  ignore,
                   attenuation: this.attenuation,
                 }
               }
