@@ -1,0 +1,365 @@
+<!doctype html>
+<html>
+    <head>
+        <title>RTIAW</title>
+        <meta charset="utf-8" />
+    <style>
+      c { position: absolute; }
+      html,
+      body {
+        width: 800;
+        height: 100%;
+        margin: 5;
+      }
+      c {
+        width: 100%;
+        height: 600;
+      }
+    </style>
+    </head>
+    <body>
+        <canvas id="c" width="800" height="600"></canvas>
+        <script>
+            var a = document.getElementsByTagName('canvas')[0];
+            var c = a.getContext('2d');
+
+            class HitableList {
+              constructor() {
+                this.entries = [];
+              }
+
+              add(entry) {
+                this.entries.push(entry);
+              }
+
+              hit(ray, tmin, tmax) {
+                let hitAnything = false;
+                let closestSoFar = tmax;
+                this.entries.forEach((entry) => {
+                  const result = entry.hit(ray, tmin, closestSoFar);
+                  if (result) {
+                    hitAnything = result;
+                    closestSoFar = result.t;
+                  }
+                });
+                return hitAnything;
+              }
+            }
+
+            class Sphere {
+              constructor(vec3Center, radius, material) {
+                this.vec3Center = vec3Center;
+                this.radius = radius;
+                this.material = material;
+              }
+
+              hit(ray, tmin, tmax) {
+                const oc = ray.origin.sub(this.vec3Center);
+                const a = ray.direction.dot(ray.direction);
+                const b = oc.dot(ray.direction);
+                const c = oc.dot(oc) - this.radius * this.radius;
+                const discriminant = b * b - a * c;
+                if (discriminant > 0) {
+                  let temp = (-b - Math.sqrt(discriminant)) / a;
+                  if (temp < tmax && temp > tmin) {
+                    const p = ray.pointAtParameter(temp);
+                    //return hitRecord
+                    return {
+                      material: this.material,
+                      t: temp,
+                      p,
+                      normal: p
+                        .sub(this.vec3Center)
+                        .div(this.radius),
+                    }
+                  }
+                  temp = (-b + Math.sqrt(discriminant)) / a;
+                  if (temp < tmax && temp > tmin) {
+                    const p = ray.pointAtParameter(temp);
+                    //return hitRecord
+                    return {
+                      material: this.material,
+                      t: temp,
+                      p,
+                      normal: p
+                        .sub(this.vec3Center)
+                        .div(this.radius),
+                    }
+                  }
+                }
+                return false;
+              }
+            }
+
+            class Vec3 {
+              constructor(x = 0, y = 0, z = 0) {
+                this.x = x;
+                this.y = y;
+                this.z = z;
+              }
+
+              static randomInUnitSphere() {
+                const vec1 = new Vec3(1, 1, 1);
+                let p;
+                do {
+                  p = new Vec3(Math.random(), Math.random(), Math.random())
+                    .mul(2)
+                    .sub(vec1);
+                } while (p.squaredLength() >= 1);
+                return p;
+              }
+
+              mul(t) {
+                return new Vec3(
+                  this.x * t,
+                  this.y * t,
+                  this.z * t
+                );
+              }
+
+              mulVec(vec3) {
+                return new Vec3(
+                  this.x * vec3.x,
+                  this.y * vec3.y,
+                  this.z * vec3.z
+                );
+              }
+
+              add(vec3) {
+                return new Vec3(
+                  this.x + vec3.x,
+                  this.y + vec3.y,
+                  this.z + vec3.z
+                );
+              }
+
+              neg(vec3) {
+                return new Vec3(
+                  -this.x,
+                  -this.y,
+                  -this.z
+                );
+              }
+
+              sub(vec3) {
+                return new Vec3(
+                  this.x - vec3.x,
+                  this.y - vec3.y,
+                  this.z - vec3.z
+                );
+              }
+
+              dot(vec3) {
+                return this.x * vec3.x +
+                  this.y * vec3.y +
+                  this.z * vec3.z;
+              }
+
+              div(t) {
+                const k = 1 / t;
+                return new Vec3(
+                  this.x * k,
+                  this.y * k,
+                  this.z * k
+                );
+              }
+              cross(vec3) {
+                const ax = this.x, ay = this.y, az = this.z,
+                      bx = vec3.x, by = vec3.y, bz = vec3.z;
+                return new Vec3(
+                  ay * bz - az * by,
+                  az * bx - ax * bz,
+                  ax * by - ay * bx
+                );
+              }
+
+              length() {
+                return Math.sqrt(
+                  this.x * this.x +
+                  this.y * this.y +
+                  this.z * this.z
+                );
+              }
+
+              squaredLength() {
+                return
+                  this.x * this.x +
+                  this.y * this.y +
+                  this.z * this.z;
+              }
+
+              unitVector() {
+                return this.div(this.length());
+              }
+            }
+
+            class Ray {
+              constructor(vec3Origin, vec3Direction) {
+                this.origin = vec3Origin;
+                this.direction = vec3Direction;
+              }
+
+              origin() {
+                return this.origin;
+              }
+
+              direction() {
+                return this.direction;
+              }
+
+              pointAtParameter(t) {
+                const directionT = this.direction.mul(t);
+                return this.origin.add(directionT);
+              }
+
+            }
+
+            class Camera {
+
+              constructor(vec3LookFrom, vec3Lookat, vec3Vup, vfov, aspect) {
+                const theta = vfov * Math.PI / 180;
+                const halfHeight = Math.tan(theta / 2);
+                const halfWidth = aspect * halfHeight;
+                const w = vec3LookFrom.sub(vec3Lookat).unitVector();
+                const u = vec3Vup.cross(w).unitVector();
+                const v = w.cross(u);
+                //this.lowerLeftCorner = new Vec3(-halfWidth, -halfHeight, -1);
+                this.origin = vec3LookFrom;
+                this.lowerLeftCorner = vec3LookFrom
+                  .sub(u.mul(halfWidth))
+                  .sub(v.mul(halfHeight))
+                  .sub(w);
+                this.horizontal = u.mul(2 * halfWidth);
+                this.vertical = v.mul(2 * halfHeight);
+              }
+
+              getRay(s, t) {
+                const vecDirection = this.lowerLeftCorner
+                  .add(this.horizontal.mul(s))
+                  .add(this.vertical.mul(t))
+                  .sub(this.origin);
+                return new Ray(this.origin, vecDirection);
+              }
+            }
+
+            class Metal {
+              constructor(vec3Albedo, fuzziness) {
+                this.albedo = vec3Albedo;
+                this.fuzziness = 1;
+                if (fuzziness < 1) {
+                  this.fuzziness = fuzziness;
+                }
+              }
+
+              _reflect(vec3V, vec3N) {
+                const dot = 2 * vec3V
+                  .dot(vec3N);
+                return vec3V.sub(vec3N.mul(dot));
+              }
+
+              scatter(rayIn, hitRecord) {
+                const reflected = this._reflect(rayIn.direction.unitVector(), hitRecord.normal);
+                const randomFuzzyness = Vec3.randomInUnitSphere().mul(this.fuzziness);
+                const scattered = new Ray(hitRecord.p, reflected.add(randomFuzzyness));
+                return {
+                  scattered,
+                  attenuation: this.albedo,
+                }
+              }
+            }
+
+            class Lambertian {
+              constructor(vec3Albedo) {
+                this.albedo = vec3Albedo;
+              }
+
+              scatter(rayIn, hitRecord) {
+                const target = hitRecord.p
+                  .add(hitRecord.normal)
+                  .add(Vec3.randomInUnitSphere());
+                const scattered = new Ray(hitRecord.p, target.sub(hitRecord.p));
+                return {
+                  scattered,
+                  attenuation: this.albedo,
+                }
+              }
+
+            }
+
+            class Dielectric {
+              constructor(ri) {
+                this.ri = ri;
+                // glass absorb nothing
+                this.attenuation = new Vec3(1, 1, 1);
+              }
+
+              _reflect(vec3V, vec3N) {
+                const dot = 2 * vec3V
+                  .dot(vec3N);
+                return vec3V.sub(vec3N.mul(dot));
+              }
+
+              _schlick(cosine, refIndex) {
+                const r0 = (1 - refIndex) / (1 + refIndex);
+                const r1 = r0 * r0;
+                return r1 + (1 - r1) * Math.pow((1 - cosine), 5);
+              }
+
+              _refract(vec3V, vec3N, niOverNt) {
+                const uv = vec3V.unitVector();
+                const dt = uv.dot(vec3N);
+                const discriminant = 1 - niOverNt * niOverNt * (1 - dt * dt);
+                if (discriminant > 0) {
+                  const nMulDt = vec3N.mul(dt);
+                  const uvSub = uv.sub(nMulDt);
+                  return uvSub
+                    .mul(niOverNt)
+                    .sub(vec3N.mul(Math.sqrt(discriminant)));
+                }
+              }
+
+              scatter(rayIn, hitRecord) {
+                let outwardNormal;
+                let niOverNt;
+                let cosine;
+                let reflectProb;
+                const rayDot = rayIn.direction.dot(hitRecord.normal);
+                if (rayDot > 0) {
+                  outwardNormal = hitRecord.normal.neg();
+                  niOverNt = this.ri;
+                  cosine = this.ri * rayDot / rayIn.direction.length();
+                } else {
+                  outwardNormal = hitRecord.normal
+                  niOverNt = 1 / this.ri;
+                  cosine = -rayDot / rayIn.direction.length();
+                }
+
+                let scattered;
+                const reflected = this._reflect(rayIn.direction, hitRecord.normal);
+                const refracted = this._refract(rayIn.direction, outwardNormal, niOverNt);
+                if (refracted) {
+                  //scattered = new Ray(hitRecord.p, refracted);
+                  reflectProb = this._schlick(cosine, this.ri);
+                } else {
+                  scattered = new Ray(hitRecord.p, reflected);
+                  reflectProb = 1;
+                }
+
+                if (Math.random() < reflectProb) {
+                  scattered = new Ray(hitRecord.p, reflected);
+                } else {
+                  scattered = new Ray(hitRecord.p, refracted);
+                }
+
+                return {
+                  scattered,
+                  attenuation: this.attenuation,
+                }
+              }
+
+            }
+
+        </script>
+        <script src="index.js"></script>
+    </body>
+</html>
