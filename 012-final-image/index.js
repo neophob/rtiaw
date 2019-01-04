@@ -93,9 +93,9 @@ function makeScene() {
   return hitableList;
 }
 
-const nx = 800/1;
-const ny = 600/1;
-const ns = 100;
+const nx = 1200/1;
+const ny = 800/1;
+const ns = 150;
 let offset = 0;
 
 const hitableList = makeScene();
