@@ -1,6 +1,6 @@
 var IMAGE_WIDTH = 800;
 var IMAGE_HEIGHT = 600;
-var NUMBER_OF_SAMPLES = 10;
+var NUMBER_OF_SAMPLES = 1;
 var CAMERA_APERTURE = 0.1;
 
 var image = c.getImageData(0, 0, a.width, a.height);
@@ -306,29 +306,31 @@ hitableList.add(
 for (var z = 0; z < 40; z++) {
   hitableList.add(
     Sphere(
-      new Vec3(Math.random()*SPREADX, Math.random()*SPREADY, -4 - Math.random()/4),
+      new Vec3(Math.random() * SPREADX, Math.random() * SPREADY, -4 - Math.random() / 4),
       0.3 + Math.random() * 0.2,
       z < 8 ?
-        Lambertian(new Vec3(1, 0, 0)) :
-        Metal(cloudColor(), 0.5 * Math.random())
+        new Lambertian(new Vec3(1, 0, 0)) :
+        a < 16 ?
+          new Lambertian(cloudColor()) :
+          new Metal(cloudColor(), 0.5 * Math.random())
     )
   );
 }
 
 hitableList.add(
   Sphere(
-    new Vec3(Math.random()*SPREADX, Math.random()*SPREADY, -4),
-    0.5 + Math.random() * 0.4,
+    new Vec3(Math.random() * SPREADX, Math.random() * SPREADY, -4 - Math.random() / 4),
+    0.5 + Math.random() * 0.2,
     Metal(new Vec3(1, 1, 1), 0.3 * Math.random())
   )
 );
 hitableList.add(
   Sphere(
-    new Vec3(Math.random()*SPREADX, Math.random()*SPREADY, -3.5),
+    new Vec3(Math.random() * SPREADX, Math.random() * SPREADY, -4 - Math.random() / 4),
     0.5 + Math.random() * 0.2,
     Metal(new Vec3(1, 1, 1), 0.3 * Math.random())
   )
-);/**/
+);
 // BUILD SCENE END
 
 var offset = 0;
