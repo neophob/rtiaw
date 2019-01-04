@@ -414,10 +414,10 @@ function makeCloudScene() {
     hitableList.add(
       new Sphere(
         new Vec3(Math.random()*SPREADX, Math.random()*SPREADY, -4 - Math.random()/4),
-        0.4 + Math.random() * 0.1,
-        a < 30 ?
-          new Metal(cloudColor(), 0.5 * Math.random()) :
-          new Lambertian(cloudColor())
+        0.3 + Math.random() * 0.2,
+        a < 8 ?
+          new Lambertian(new Vec3(1, 0, 0)) :
+          new Metal(cloudColor(), 0.5 * Math.random())
       )
     );
   }
@@ -426,7 +426,7 @@ function makeCloudScene() {
     new Sphere(
       new Vec3(Math.random() * SPREADX, Math.random() * SPREADY, -4),
       0.5 + Math.random() * 0.4,
-      new Metal(new Vec3(1, 0, 0), 0.3 * Math.random())
+      new Metal(new Vec3(1, 1, 1), 0.3 * Math.random())
     )
   );
   hitableList.add(

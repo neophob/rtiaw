@@ -297,8 +297,8 @@ var SPREADX = 6;
 var SPREADY = 4;
 hitableList.add(
   Sphere(
-//    new Vec3(8, 0, -20), 15,
-    new Vec3(0, -1000, 0), 1000,
+    new Vec3(8, 0, -20), 15,
+//    new Vec3(0, -1000, 0), 1000,
     Metal(cloudColor(), 0.05)
   )
 );
@@ -308,19 +308,18 @@ for (var z = 0; z < 40; z++) {
     Sphere(
       new Vec3(Math.random()*SPREADX, Math.random()*SPREADY, -4 - Math.random()/4),
       0.3 + Math.random() * 0.2,
-      z < 30 ?
-        Metal(cloudColor(), 0.5 * Math.random()) :
-        Lambertian(cloudColor())
+      z < 8 ?
+        Lambertian(new Vec3(1, 0, 0)) :
+        Metal(cloudColor(), 0.5 * Math.random())
     )
   );
-
 }
 
 hitableList.add(
   Sphere(
     new Vec3(Math.random()*SPREADX, Math.random()*SPREADY, -4),
     0.5 + Math.random() * 0.4,
-    Metal(new Vec3(1, 0, 0), 0.3 * Math.random())
+    Metal(new Vec3(1, 1, 1), 0.3 * Math.random())
   )
 );
 hitableList.add(
