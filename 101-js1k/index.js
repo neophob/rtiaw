@@ -297,7 +297,8 @@ var SPREADX = 6;
 var SPREADY = 4;
 hitableList.add(
   Sphere(
-    new Vec3(8, 0, -20), 15,
+//    new Vec3(8, 0, -20), 15,
+    new Vec3(0, -1000, 0), 1000,
     Metal(cloudColor(), 0.05)
   )
 );
