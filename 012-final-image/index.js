@@ -100,33 +100,6 @@ let offset = 0;
 
 const hitableList = makeScene();
 
-/*const hitableList = new HitableList();
-hitableList.add(
-  new Sphere(
-    new Vec3(0, 0, -1), 0.5, new Lambertian(new Vec3(0.1, 0.2, 0.5))
-  )
-);
-hitableList.add(
-  new Sphere(
-    new Vec3(0, -100.5, -1), 100, new Lambertian(new Vec3(0.8, 0.8, 0.0))
-  )
-);
-hitableList.add(
-  new Sphere(
-    new Vec3(1, 0, -1), 0.5, new Metal(new Vec3(0.8, 0.6, 0.2), 0.8)
-  )
-);
-hitableList.add(
-  new Sphere(
-    new Vec3(-1, 0, -1), 0.5, new Dielectric(1.5)
-  )
-);
-hitableList.add(
-  new Sphere(
-    new Vec3(-1, 0, -1), -0.45, new Dielectric(1.5)
-  )
-);*/
-
 const lookFrom = new Vec3(13, 2, 3);
 const lookAt = new Vec3(0, 0, 0);
 const aperture = 0.1;

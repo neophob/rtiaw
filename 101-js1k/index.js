@@ -1,6 +1,6 @@
 var IMAGE_WIDTH = 800;
 var IMAGE_HEIGHT = 600;
-var NUMBER_OF_SAMPLES = 1000;
+var NUMBER_OF_SAMPLES = 10;
 var CAMERA_APERTURE = 0.1;
 
 var image = c.getImageData(0, 0, a.width, a.height);
@@ -76,7 +76,7 @@ class Vec3 {
     this.z = z;
   }
 
-  static randomInUnitSphere() {
+  static rand() {
     var vec1 = new Vec3(1, 1, 1);
     var p;
     do {
@@ -220,33 +220,29 @@ class Camera {
   }
 }
 
-function Metal(attenuation, f) {
+function Metal(a, f) {
   return {
     scatter: (rayIn, hitRecord) => {
       var reflected = rayIn.direction.uv().sub(hitRecord.normal.mul(2 * rayIn.direction.uv().dot(hitRecord.normal)));
-      var scattered = Ray(hitRecord.p, reflected.add(
+      var s = Ray(hitRecord.p, reflected.add(
         //randomFuzzyness
-        Vec3.randomInUnitSphere().mul(f)
+        Vec3.rand().mul(f)
       ));
-      return {
-        scattered,
-        attenuation,
-      }
+      return { s, a }
     }
   }
 }
 
-
-function Lambertian(attenuation) {
+function Lambertian(a) {
   return {
     scatter: (rayIn, hitRecord) => {
         var target = hitRecord.p
         .add(hitRecord.normal)
-        .add(Vec3.randomInUnitSphere());
+        .add(Vec3.rand());
 
       return {
-        scattered: Ray(hitRecord.p, target.sub(hitRecord.p)),
-        attenuation,
+        s: Ray(hitRecord.p, target.sub(hitRecord.p)),
+        a,
       }
     }
   }
@@ -260,8 +256,8 @@ function color(ray, hitableList, depth) {
     //hit, draw sphere
     var material = hitVec.material.scatter(ray, hitVec);
     if (depth < 50 && material) {
-      return material.attenuation
-        .mulVec(color(material.scattered, hitableList, depth + 1));
+      return material.a
+        .mulVec(color(material.s, hitableList, depth + 1));
     }
     return vecZero;
   }
@@ -281,7 +277,7 @@ function cloudColor() {
 var CAMERA_LOOK_FROM = new Vec3(-6, -4, 10);
 var CAMERA_LOOK_AT = vecZero;
 var CAMERA_LOOK_UP = new Vec3(0, 1, 0);
-var CAMERA_DISTANCE_TO_FOCUS = CAMERA_LOOK_FROM.sub(CAMERA_LOOK_AT).length();
+var CAMERA_DISTANCE_TO_FOCUS=18;
 var CAMERA_VERTICAL_FIELD_OF_VIEW = 16;
 
 var camera = new Camera(
@@ -306,12 +302,12 @@ hitableList.add(
   )
 );
 
-for (var z = 0; z < 30; z++) {
+for (var z = 0; z < 40; z++) {
   hitableList.add(
     Sphere(
       new Vec3(Math.random()*SPREADX, Math.random()*SPREADY, -4 - Math.random()/4),
       0.3 + Math.random() * 0.2,
-      z < 25 ?
+      z < 30 ?
         Metal(cloudColor(), 0.5 * Math.random()) :
         Lambertian(cloudColor())
     )
@@ -321,14 +317,16 @@ for (var z = 0; z < 30; z++) {
 
 hitableList.add(
   Sphere(
-    new Vec3(Math.random()*SPREADX, Math.random()*SPREADY, -4), 0.5 + Math.random() * 0.4,
-    Metal(new Vec3(1, 0, 0), 0.5 * Math.random())
+    new Vec3(Math.random()*SPREADX, Math.random()*SPREADY, -4),
+    0.5 + Math.random() * 0.4,
+    Metal(new Vec3(1, 0, 0), 0.3 * Math.random())
   )
 );
 hitableList.add(
   Sphere(
-    new Vec3(Math.random()*SPREADX, Math.random()*SPREADY, -3.5), 0.3 + Math.random() * 0.2,
-    Lambertian(new Vec3(1, 0, 0))
+    new Vec3(Math.random()*SPREADX, Math.random()*SPREADY, -3.5),
+    0.5 + Math.random() * 0.2,
+    Metal(new Vec3(1, 1, 1), 0.3 * Math.random())
   )
 );/**/
 // BUILD SCENE END

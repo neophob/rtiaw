@@ -1,8 +1,8 @@
 'use strict';
 
-const IMAGE_WIDTH = 800/1;
-const IMAGE_HEIGHT = 600/1;
-const NUMBER_OF_SAMPLES = 450;
+const IMAGE_WIDTH = 1200/1;
+const IMAGE_HEIGHT = 800/1;
+const NUMBER_OF_SAMPLES = 500;
 
 const CAMERA_APERTURE = 0.1;
 
@@ -410,31 +410,32 @@ function makeCloudScene() {
   const SPREADX = 6;
   const SPREADY = 4;
 
-  for (let a = 0; a < 30; a++) {
+  for (let a = 0; a < 40; a++) {
     hitableList.add(
       new Sphere(
         new Vec3(Math.random()*SPREADX, Math.random()*SPREADY, -4 - Math.random()/4),
         0.4 + Math.random() * 0.1,
-        a < 25 ?
+        a < 30 ?
           new Metal(cloudColor(), 0.5 * Math.random()) :
           new Lambertian(cloudColor())
       )
     );
   }
 
-  const red = new Vec3(1, 0, 0);
   hitableList.add(
     new Sphere(
-      new Vec3(Math.random()*SPREADX, Math.random()*SPREADY, -4), 0.5 + Math.random() * 0.4,
-      new Metal(red, 0.5 * Math.random())
+      new Vec3(Math.random() * SPREADX, Math.random() * SPREADY, -4),
+      0.5 + Math.random() * 0.4,
+      new Metal(new Vec3(1, 0, 0), 0.3 * Math.random())
     )
   );
   hitableList.add(
     new Sphere(
-      new Vec3(Math.random()*SPREADX, Math.random()*SPREADY, -3.5), 0.3 + Math.random() * 0.2,
-      new Lambertian(red)
+      new Vec3(Math.random() * SPREADX, Math.random() * SPREADY, -3.5),
+      0.5 + Math.random() * 0.4,
+      new Metal(new Vec3(1, 1, 1), 0.3 * Math.random())
     )
-  );/**/
+  );
 
   return hitableList;
 }
@@ -442,7 +443,7 @@ function makeCloudScene() {
 const CAMERA_LOOK_FROM = new Vec3(-6, -4, 10);
 const CAMERA_LOOK_AT = new Vec3(0, 0, 0);
 const CAMERA_LOOK_UP = new Vec3(0, 1, 0);
-const CAMERA_DISTANCE_TO_FOCUS = CAMERA_LOOK_FROM.sub(CAMERA_LOOK_AT).length();
+const CAMERA_DISTANCE_TO_FOCUS = 18;//CAMERA_LOOK_FROM.sub(CAMERA_LOOK_AT).length();
 console.log('CAMERA_DISTANCE_TO_FOCUS',CAMERA_DISTANCE_TO_FOCUS)
 const CAMERA_VERTICAL_FIELD_OF_VIEW = 16;
 
