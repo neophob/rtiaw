@@ -28,46 +28,43 @@ class HitableList {
   }
 }
 
-class Sphere {
-  constructor(vec3Center, radius, material) {
-    this.vec3Center = vec3Center;
-    this.radius = radius;
-    this.material = material;
-  }
+function Sphere(vec3Center, radius, material) {
+  return {
+    hit: (ray, tmin, tmax) => {
+      var oc = ray.origin.sub(vec3Center);
+      var a = ray.direction.dot(ray.direction);
+      var b = oc.dot(ray.direction);
+      var c = oc.dot(oc) - radius * radius;
+      var discriminant = b * b - a * c;
+      if (discriminant > 0) {
+        var temp = (-b - Math.sqrt(discriminant)) / a;
+        if (temp < tmax && temp > tmin) {
+          var p = ray.pointAtParameter(temp);
+          //return hitRecord
+          return {
+            material,
+            t: temp,
+            p,
+            normal: p
+              .sub(vec3Center)
+              .div(radius),
+          }
+        }
+        temp = (-b + Math.sqrt(discriminant)) / a;
+        if (temp < tmax && temp > tmin) {
+          var p = ray.pointAtParameter(temp);
+          //return hitRecord
+          return {
+            material,
+            t: temp,
+            p,
+            normal: p
+              .sub(vec3Center)
+              .div(radius),
+          }
+        }
+      }
 
-  hit(ray, tmin, tmax) {
-    var oc = ray.origin.sub(this.vec3Center);
-    var a = ray.direction.dot(ray.direction);
-    var b = oc.dot(ray.direction);
-    var c = oc.dot(oc) - this.radius * this.radius;
-    var discriminant = b * b - a * c;
-    if (discriminant > 0) {
-      var temp = (-b - Math.sqrt(discriminant)) / a;
-      if (temp < tmax && temp > tmin) {
-        var p = ray.pointAtParameter(temp);
-        //return hitRecord
-        return {
-          material: this.material,
-          t: temp,
-          p,
-          normal: p
-            .sub(this.vec3Center)
-            .div(this.radius),
-        }
-      }
-      temp = (-b + Math.sqrt(discriminant)) / a;
-      if (temp < tmax && temp > tmin) {
-        var p = ray.pointAtParameter(temp);
-        //return hitRecord
-        return {
-          material: this.material,
-          t: temp,
-          p,
-          normal: p
-            .sub(this.vec3Center)
-            .div(this.radius),
-        }
-      }
     }
   }
 }
@@ -173,14 +170,13 @@ class Vec3 {
   }
 }
 
-class Ray {
-  constructor(vec3Origin, vec3Direction) {
-    this.origin = vec3Origin;
-    this.direction = vec3Direction;
-  }
-
-  pointAtParameter(t) {
-    return this.origin.add(this.direction.mul(t));
+function Ray(origin, direction) {
+  return {
+    origin,
+    direction,
+    pointAtParameter: (t) => {
+      return origin.add(direction.mul(t));
+    }
   }
 }
 
@@ -220,7 +216,7 @@ class Camera {
       .add(this.vertical.mul(t))
       .sub(this.origin)
       .sub(offset);
-    return new Ray(this.origin.add(offset), vecDirection);
+    return Ray(this.origin.add(offset), vecDirection);
   }
 }
 
@@ -232,7 +228,7 @@ class Metal {
 
   scatter(rayIn, hitRecord) {
     var reflected = rayIn.direction.uv().sub(hitRecord.normal.mul(2 * rayIn.direction.uv().dot(hitRecord.normal)));
-    var scattered = new Ray(hitRecord.p, reflected.add(
+    var scattered = Ray(hitRecord.p, reflected.add(
       //randomFuzzyness
       Vec3.randomInUnitSphere().mul(this.f)
     ));
@@ -243,23 +239,19 @@ class Metal {
   }
 }
 
-class Lambertian {
-  constructor(vec3Albedo) {
-    this.albedo = vec3Albedo;
-  }
+function Lambertian(attenuation) {
+  return {
+    scatter: (rayIn, hitRecord) => {
+        var target = hitRecord.p
+        .add(hitRecord.normal)
+        .add(Vec3.randomInUnitSphere());
 
-  scatter(rayIn, hitRecord) {
-    var target = hitRecord.p
-      .add(hitRecord.normal)
-      .add(Vec3.randomInUnitSphere());
-
-    var scattered = new Ray(hitRecord.p, target.sub(hitRecord.p));
-    return {
-      scattered,
-      attenuation: this.albedo,
+      return {
+        scattered: Ray(hitRecord.p, target.sub(hitRecord.p)),
+        attenuation,
+      }
     }
   }
-
 }
 
 var vecZero = new Vec3(0, 0, 0);
@@ -310,7 +302,7 @@ var hitableList = new HitableList();
 var SPREADX = 6;
 var SPREADY = 4;
 hitableList.add(
-  new Sphere(
+  Sphere(
     new Vec3(8, 0, -20), 15,
     new Metal(cloudColor(), 0.05)
   )
@@ -318,27 +310,27 @@ hitableList.add(
 
 for (var z = 0; z < 30; z++) {
   hitableList.add(
-    new Sphere(
+    Sphere(
       new Vec3(Math.random()*SPREADX, Math.random()*SPREADY, -4 - Math.random()/4),
       0.3 + Math.random() * 0.2,
       z < 25 ?
         new Metal(cloudColor(), 0.5 * Math.random()) :
-        new Lambertian(cloudColor())
+        Lambertian(cloudColor())
     )
   );
 
 }
 
 hitableList.add(
-  new Sphere(
+  Sphere(
     new Vec3(Math.random()*SPREADX, Math.random()*SPREADY, -4), 0.5 + Math.random() * 0.4,
     new Metal(new Vec3(1, 0, 0), 0.5 * Math.random())
   )
 );
 hitableList.add(
-  new Sphere(
+  Sphere(
     new Vec3(Math.random()*SPREADX, Math.random()*SPREADY, -3.5), 0.3 + Math.random() * 0.2,
-    new Lambertian(new Vec3(1, 0, 0))
+    Lambertian(new Vec3(1, 0, 0))
   )
 );/**/
 // BUILD SCENE END
