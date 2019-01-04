@@ -25,3 +25,4 @@ by Peter Shirley, js edition.
 ![](100-refactoring/12.png?raw=true)
 ![](100-refactoring/13.png?raw=true)
 ![](100-refactoring/14.png?raw=true)
+![](100-refactoring/15.png?raw=true)
