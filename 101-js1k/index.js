@@ -1,6 +1,6 @@
 var IMAGE_WIDTH = 800;
 var IMAGE_HEIGHT = 600;
-var NUMBER_OF_SAMPLES = 2;
+var NUMBER_OF_SAMPLES = 1000;
 var CAMERA_APERTURE = 0.1;
 
 var image = c.getImageData(0, 0, a.width, a.height);
@@ -220,24 +220,22 @@ class Camera {
   }
 }
 
-class Metal {
-  constructor(vec3Albedo, f) {
-    this.albedo = vec3Albedo;
-    this.f = f;
-  }
-
-  scatter(rayIn, hitRecord) {
-    var reflected = rayIn.direction.uv().sub(hitRecord.normal.mul(2 * rayIn.direction.uv().dot(hitRecord.normal)));
-    var scattered = Ray(hitRecord.p, reflected.add(
-      //randomFuzzyness
-      Vec3.randomInUnitSphere().mul(this.f)
-    ));
-    return {
-      scattered,
-      attenuation: this.albedo,
+function Metal(attenuation, f) {
+  return {
+    scatter: (rayIn, hitRecord) => {
+      var reflected = rayIn.direction.uv().sub(hitRecord.normal.mul(2 * rayIn.direction.uv().dot(hitRecord.normal)));
+      var scattered = Ray(hitRecord.p, reflected.add(
+        //randomFuzzyness
+        Vec3.randomInUnitSphere().mul(f)
+      ));
+      return {
+        scattered,
+        attenuation,
+      }
     }
   }
 }
+
 
 function Lambertian(attenuation) {
   return {
@@ -304,7 +302,7 @@ var SPREADY = 4;
 hitableList.add(
   Sphere(
     new Vec3(8, 0, -20), 15,
-    new Metal(cloudColor(), 0.05)
+    Metal(cloudColor(), 0.05)
   )
 );
 
@@ -314,7 +312,7 @@ for (var z = 0; z < 30; z++) {
       new Vec3(Math.random()*SPREADX, Math.random()*SPREADY, -4 - Math.random()/4),
       0.3 + Math.random() * 0.2,
       z < 25 ?
-        new Metal(cloudColor(), 0.5 * Math.random()) :
+        Metal(cloudColor(), 0.5 * Math.random()) :
         Lambertian(cloudColor())
     )
   );
@@ -324,7 +322,7 @@ for (var z = 0; z < 30; z++) {
 hitableList.add(
   Sphere(
     new Vec3(Math.random()*SPREADX, Math.random()*SPREADY, -4), 0.5 + Math.random() * 0.4,
-    new Metal(new Vec3(1, 0, 0), 0.5 * Math.random())
+    Metal(new Vec3(1, 0, 0), 0.5 * Math.random())
   )
 );
 hitableList.add(

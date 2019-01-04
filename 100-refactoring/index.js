@@ -2,7 +2,7 @@
 
 const IMAGE_WIDTH = 800/1;
 const IMAGE_HEIGHT = 600/1;
-const NUMBER_OF_SAMPLES = 150;
+const NUMBER_OF_SAMPLES = 450;
 
 const CAMERA_APERTURE = 0.1;
 
