@@ -2,7 +2,7 @@
 
 const IMAGE_WIDTH = 800/1;
 const IMAGE_HEIGHT = 600/1;
-const NUMBER_OF_SAMPLES = 10;
+const NUMBER_OF_SAMPLES = 150;
 
 const CAMERA_APERTURE = 0.1;
 
@@ -403,7 +403,7 @@ function makeCloudScene() {
   hitableList.add(
     new Sphere(
       new Vec3(8, 0, -20), 15,
-      new Metal(cloudColor(), 0.05)
+      new Metal(cloudColor(), 0.1)
     )
   );
 
@@ -413,32 +413,26 @@ function makeCloudScene() {
   for (let a = 0; a < 30; a++) {
     hitableList.add(
       new Sphere(
-        new Vec3(Math.random()*SPREADX, Math.random()*SPREADY, -4),
-        0.3 + Math.random() * 0.2,
-        new Lambertian(cloudColor())
+        new Vec3(Math.random()*SPREADX, Math.random()*SPREADY, -4 - Math.random()/4),
+        0.4 + Math.random() * 0.1,
+        a < 25 ?
+          new Metal(cloudColor(), 0.5 * Math.random()) :
+          new Lambertian(cloudColor())
       )
     );
-    hitableList.add(
-      new Sphere(
-        new Vec3(Math.random()*SPREADX, Math.random()*SPREADY, -4),
-        0.3 + Math.random() * 0.2,
-        new Metal(cloudColor(), 0.5 * Math.random())
-      )
-    );
-
   }
 
   const red = new Vec3(1, 0, 0);
   hitableList.add(
     new Sphere(
       new Vec3(Math.random()*SPREADX, Math.random()*SPREADY, -4), 0.5 + Math.random() * 0.4,
-      new Lambertian(red)
+      new Metal(red, 0.5 * Math.random())
     )
   );
   hitableList.add(
     new Sphere(
       new Vec3(Math.random()*SPREADX, Math.random()*SPREADY, -3.5), 0.3 + Math.random() * 0.2,
-      new Metal(red, 0.5 * Math.random())
+      new Lambertian(red)
     )
   );/**/
 
