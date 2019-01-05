@@ -324,13 +324,17 @@ for (var z = 0; z < 40; z++) {
 
 // BUILD SCENE END
 
+var renderSamples = [];
+
 setInterval(() => {
-  for (var a = 0; a < IMAGE_WIDTH; a++) {
+  for (var a = 0; a < IMAGE_WIDTH * 8; a++) {
     var i = (Math.random() * IMAGE_WIDTH) | 0;
     var j = (Math.random() * IMAGE_HEIGHT) | 0;
     var col = vecZero;
-    var NUMBER_OF_SAMPLES = (Math.random() * 32)|0;
-    for (let y = 0; y < NUMBER_OF_SAMPLES; y++) {
+    var offset = 4 * (i + j * IMAGE_WIDTH);
+
+    renderSamples[offset] = (renderSamples[offset] | 1) * 2;
+    for (let y = 0; y < renderSamples[offset]; y++) {
       col = col.add(color(camera.getRay(
         i / IMAGE_WIDTH,
         j / IMAGE_HEIGHT
@@ -338,10 +342,9 @@ setInterval(() => {
     }
 
     // gamma correction
-    var offset = 4 * (i + j * IMAGE_WIDTH);
-    image.data[offset    ] = 255 * Math.sqrt(col.x/NUMBER_OF_SAMPLES);
-    image.data[offset + 1] = 255 * Math.sqrt(col.y/NUMBER_OF_SAMPLES);
-    image.data[offset + 2] = 255 * Math.sqrt(col.z/NUMBER_OF_SAMPLES);
+    image.data[offset    ] = 255 * Math.sqrt(col.x/renderSamples[offset]);
+    image.data[offset + 1] = 255 * Math.sqrt(col.y/renderSamples[offset]);
+    image.data[offset + 2] = 255 * Math.sqrt(col.z/renderSamples[offset]);
     image.data[offset + 3] = 255;
   }
   c.putImageData(image,0,0);
