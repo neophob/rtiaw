@@ -43,7 +43,7 @@ function Sphere(vec3Center, radius, material) {
 }
 
 class Vec3 {
-  constructor(x = 0, y = 0, z = 0) {
+  constructor(x, y, z) {
     this.x = x;
     this.y = y;
     this.z = z;
@@ -84,7 +84,7 @@ class Vec3 {
     );
   }
 
-  neg(vec3) {
+  neg() {
     return new Vec3(
       -this.x,
       -this.y,
@@ -107,11 +107,10 @@ class Vec3 {
   }
 
   div(t) {
-    var k = 1 / t;
     return new Vec3(
-      this.x * k,
-      this.y * k,
-      this.z * k
+      this.x * 1 / t,
+      this.y * 1 / t,
+      this.z * 1 / t
     );
   }
   cross(vec3) {
@@ -169,15 +168,15 @@ var CAMERA_VERTICAL_FIELD_OF_VIEW = 16;
 var halfHeight = Math.tan(CAMERA_VERTICAL_FIELD_OF_VIEW * Math.PI / 180 / 2);
 var halfWidth = IMAGE_WIDTH / IMAGE_HEIGHT * halfHeight;
 var w = CAMERA_LOOK_FROM.sub(CAMERA_LOOK_AT).uv();
-var u = CAMERA_LOOK_UP.cross(this.w).uv();
-var v = this.w.cross(this.u);
+var u = CAMERA_LOOK_UP.cross(w).uv();
+var v = w.cross(u);
 var origin = CAMERA_LOOK_FROM;
 var lowerLeftCorner = CAMERA_LOOK_FROM
-  .sub(this.u.mul(halfWidth * CAMERA_DISTANCE_TO_FOCUS))
-  .sub(this.v.mul(halfHeight * CAMERA_DISTANCE_TO_FOCUS))
-  .sub(this.w.mul(CAMERA_DISTANCE_TO_FOCUS));
-var horizontal = this.u.mul(2 * halfWidth * CAMERA_DISTANCE_TO_FOCUS);
-var vertical = this.v.mul(2 * halfHeight * CAMERA_DISTANCE_TO_FOCUS);
+  .sub(u.mul(halfWidth * CAMERA_DISTANCE_TO_FOCUS))
+  .sub(v.mul(halfHeight * CAMERA_DISTANCE_TO_FOCUS))
+  .sub(w.mul(CAMERA_DISTANCE_TO_FOCUS));
+var horizontal = u.mul(2 * halfWidth * CAMERA_DISTANCE_TO_FOCUS);
+var vertical = v.mul(2 * halfHeight * CAMERA_DISTANCE_TO_FOCUS);
 
 
 function getRay(s, t) {
