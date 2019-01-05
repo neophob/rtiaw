@@ -4,15 +4,15 @@ var IMAGE_HEIGHT = 600;
 function Sphere(vec3Center, radius, material) {
   return {
     hit: (ray, tmin, tmax) => {
-      var oc = ray.origin.sub(vec3Center);
-      var a = ray.direction.dot(ray.direction);
-      var b = oc.dot(ray.direction);
+      var oc = ray.o.sub(vec3Center);
+      var a = ray.d.dot(ray.d);
+      var b = oc.dot(ray.d);
       var c = oc.dot(oc) - radius * radius;
       var discriminant = b * b - a * c;
       if (discriminant > 0) {
         var temp = (-b - Math.sqrt(discriminant)) / a;
         if (temp < tmax && temp > tmin) {
-          var p = ray.pointAtParameter(temp);
+          var p = ray.p(temp);
           //return hitRecord
           return {
             material,
@@ -25,7 +25,7 @@ function Sphere(vec3Center, radius, material) {
         }
         temp = (-b + Math.sqrt(discriminant)) / a;
         if (temp < tmax && temp > tmin) {
-          var p = ray.pointAtParameter(temp);
+          var p = ray.p(temp);
           //return hitRecord
           return {
             material,
@@ -50,12 +50,11 @@ class Vec3 {
   }
 
   static rand() {
-    var vec1 = new Vec3(1, 1, 1);
     var p;
     do {
-      p = new Vec3(Math.random(), Math.random(), Math.random())
-        .mul(2)
-        .sub(vec1);
+      //TODO: could be "Math.random() * 2 - 1" - but output is larger
+      p = new Vec3(Math.random() * 2, Math.random() * 2, Math.random() * 2)
+        .sub(new Vec3(1, 1, 1));
     } while (p.squaredLength() >= 1);
     return p;
   }
@@ -108,26 +107,22 @@ class Vec3 {
 
   div(t) {
     return new Vec3(
-      this.x * 1 / t,
-      this.y * 1 / t,
-      this.z * 1 / t
+      this.x / t,
+      this.y / t,
+      this.z / t
     );
   }
   cross(vec3) {
-    var ax = this.x, ay = this.y, az = this.z,
-          bx = vec3.x, by = vec3.y, bz = vec3.z;
     return new Vec3(
-      ay * bz - az * by,
-      az * bx - ax * bz,
-      ax * by - ay * bx
+      this.y * vec3.z - this.z * vec3.y,
+      this.z * vec3.x - this.x * vec3.z,
+      this.x * vec3.y - this.y * vec3.x
     );
   }
 
   length() {
     return Math.sqrt(
-      this.x * this.x +
-      this.y * this.y +
-      this.z * this.z
+      this.squaredLength()
     );
   }
 
@@ -142,12 +137,12 @@ class Vec3 {
   }
 }
 
-function Ray(origin, direction) {
+function Ray(o, d) {
   return {
-    origin,
-    direction,
-    pointAtParameter: (t) => {
-      return origin.add(direction.mul(t));
+    o,  //origin
+    d,  //destination
+    p: (t) => { //pointAtParameter
+      return o.add(d.mul(t));
     }
   }
 }
@@ -162,10 +157,10 @@ var CAMERA_LOOK_FROM = new Vec3(0, 0, 10);
 //var CAMERA_LOOK_FROM = new Vec3(-SPREADX, -SPREADY, 10);
 var CAMERA_LOOK_AT = vecZero;
 var CAMERA_LOOK_UP = new Vec3(0, 1, 0);
-var CAMERA_DISTANCE_TO_FOCUS=18;
+var CAMERA_DISTANCE_TO_FOCUS = 18;
 var CAMERA_VERTICAL_FIELD_OF_VIEW = 16;
 
-var halfHeight = Math.tan(CAMERA_VERTICAL_FIELD_OF_VIEW * Math.PI / 180 / 2);
+var halfHeight = Math.tan(CAMERA_VERTICAL_FIELD_OF_VIEW * Math.PI / 360);
 var halfWidth = IMAGE_WIDTH / IMAGE_HEIGHT * halfHeight;
 var w = CAMERA_LOOK_FROM.sub(CAMERA_LOOK_AT).uv();
 var u = CAMERA_LOOK_UP.cross(w).uv();
@@ -204,7 +199,7 @@ function getRay(s, t) {
 function Metal(a, f) {
   return {
     scatter: (rayIn, hitRecord) => {
-      var reflected = rayIn.direction.uv().sub(hitRecord.normal.mul(2 * rayIn.direction.uv().dot(hitRecord.normal)));
+      var reflected = rayIn.d.uv().sub(hitRecord.normal.mul(2 * rayIn.d.uv().dot(hitRecord.normal)));
       return {
         s: Ray(hitRecord.p, reflected
             .add(Vec3.rand().mul(f))),
@@ -251,7 +246,7 @@ function color(ray, depth) {
     return vecZero;
   }
   //ray not hit, draw background
-  var t = 0.5 * (ray.direction.uv().y + 1);
+  var t = 0.5 * (ray.d.uv().y + 1);
   return new Vec3(1, 1, 1)
     .mul(1 - t)
     .add(new Vec3(0.7, 0.7, 1)
