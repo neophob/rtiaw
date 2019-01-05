@@ -166,44 +166,41 @@ var CAMERA_LOOK_UP = new Vec3(0, 1, 0);
 var CAMERA_DISTANCE_TO_FOCUS=18;
 var CAMERA_VERTICAL_FIELD_OF_VIEW = 16;
 
-class Camera {
+var halfHeight = Math.tan(CAMERA_VERTICAL_FIELD_OF_VIEW * Math.PI / 180 / 2);
+var halfWidth = IMAGE_WIDTH / IMAGE_HEIGHT * halfHeight;
+var w = CAMERA_LOOK_FROM.sub(CAMERA_LOOK_AT).uv();
+var u = CAMERA_LOOK_UP.cross(this.w).uv();
+var v = this.w.cross(this.u);
+var origin = CAMERA_LOOK_FROM;
+var lowerLeftCorner = CAMERA_LOOK_FROM
+  .sub(this.u.mul(halfWidth * CAMERA_DISTANCE_TO_FOCUS))
+  .sub(this.v.mul(halfHeight * CAMERA_DISTANCE_TO_FOCUS))
+  .sub(this.w.mul(CAMERA_DISTANCE_TO_FOCUS));
+var horizontal = this.u.mul(2 * halfWidth * CAMERA_DISTANCE_TO_FOCUS);
+var vertical = this.v.mul(2 * halfHeight * CAMERA_DISTANCE_TO_FOCUS);
 
-  constructor() {
-    var halfHeight = Math.tan(CAMERA_VERTICAL_FIELD_OF_VIEW * Math.PI / 180 / 2);
-    var halfWidth = IMAGE_WIDTH / IMAGE_HEIGHT * halfHeight;
-    this.w = CAMERA_LOOK_FROM.sub(CAMERA_LOOK_AT).uv();
-    this.u = CAMERA_LOOK_UP.cross(this.w).uv();
-    this.v = this.w.cross(this.u);
-    this.origin = CAMERA_LOOK_FROM;
-    this.lowerLeftCorner = CAMERA_LOOK_FROM
-      .sub(this.u.mul(halfWidth * CAMERA_DISTANCE_TO_FOCUS))
-      .sub(this.v.mul(halfHeight * CAMERA_DISTANCE_TO_FOCUS))
-      .sub(this.w.mul(CAMERA_DISTANCE_TO_FOCUS));
-    this.horizontal = this.u.mul(2 * halfWidth * CAMERA_DISTANCE_TO_FOCUS);
-    this.vertical = this.v.mul(2 * halfHeight * CAMERA_DISTANCE_TO_FOCUS);
-  }
 
-  getRay(s, t) {
-    // apply defocus blur
-    var rd;
-    do {
-      rd = new Vec3(Math.random(), Math.random(), 0)
-        .mul(2)
-        .sub(new Vec3(1, 1, 0));
-    } while (rd.dot(rd) >= 1);
+function getRay(s, t) {
+  // apply defocus blur
+  var rd;
+  do {
+    rd = new Vec3(Math.random(), Math.random(), 0)
+      .mul(2)
+      .sub(new Vec3(1, 1, 0));
+  } while (rd.dot(rd) >= 1);
 
-    rd = rd.mul(CAMERA_APERTURE / 2);
-    var offset = this.u
-      .mul(rd.x)
-      .add(this.v.mul(rd.y))
-    var vecDirection = this.lowerLeftCorner
-      .add(this.horizontal.mul(s))
-      .add(this.vertical.mul(t))
-      .sub(this.origin)
-      .sub(offset);
-    return Ray(this.origin.add(offset), vecDirection);
-  }
+  rd = rd.mul(CAMERA_APERTURE / 2);
+  var offset = u
+    .mul(rd.x)
+    .add(v.mul(rd.y))
+  var vecDirection = lowerLeftCorner
+    .add(horizontal.mul(s))
+    .add(vertical.mul(t))
+    .sub(origin)
+    .sub(offset);
+  return Ray(origin.add(offset), vecDirection);
 }
+
 
 function Metal(a, f) {
   return {
@@ -236,7 +233,7 @@ function Lambertian(a) {
 
 function color(ray, depth) {
   var hitVec;
-  var closestSoFar = Number.MAX_VALUE;
+  var closestSoFar = 1e308;
   world.forEach((entry) => {
     var result = entry.hit(ray, 0.001, closestSoFar);
     if (result) {
@@ -270,14 +267,11 @@ function cloudColor() {
   );
 }
 
-var camera = new Camera();
-
-
 //BUILD SCENE
 
 var world = [
   //background
-/*  Sphere(
+  Sphere(
     new Vec3(8, 0, -20), 15,
     Metal(cloudColor(), 0.05)
   ),
@@ -333,7 +327,7 @@ setInterval(() => {
     var col = vecZero;
 
     for (let y = 0; y < nrOfSamples; y++) {
-      col = col.add(color(camera.getRay(
+      col = col.add(color(getRay(
         i / IMAGE_WIDTH,
         j / IMAGE_HEIGHT
       ), 0));
