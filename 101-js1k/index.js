@@ -1,6 +1,5 @@
 var IMAGE_WIDTH = 800;
 var IMAGE_HEIGHT = 600;
-//var NUMBER_OF_SAMPLES = 20;
 
 function Sphere(vec3Center, radius, material) {
   return {
@@ -154,10 +153,14 @@ function Ray(origin, direction) {
   }
 }
 
+var SPREADX = 6;
+var SPREADY = 4;
+
 var image = c.getImageData(0, 0, IMAGE_WIDTH, IMAGE_HEIGHT);
 var vecZero = new Vec3(0, 0, 0);
 var CAMERA_APERTURE = 0.1;
-var CAMERA_LOOK_FROM = new Vec3(-6, -4, 10);
+var CAMERA_LOOK_FROM = new Vec3(0, 0, 10);
+//var CAMERA_LOOK_FROM = new Vec3(-SPREADX, -SPREADY, 10);
 var CAMERA_LOOK_AT = vecZero;
 var CAMERA_LOOK_UP = new Vec3(0, 1, 0);
 var CAMERA_DISTANCE_TO_FOCUS=18;
@@ -206,11 +209,12 @@ function Metal(a, f) {
   return {
     scatter: (rayIn, hitRecord) => {
       var reflected = rayIn.direction.uv().sub(hitRecord.normal.mul(2 * rayIn.direction.uv().dot(hitRecord.normal)));
-      var s = Ray(hitRecord.p, reflected.add(
-        //randomFuzzyness
-        Vec3.rand().mul(f)
-      ));
-      return { s, a }
+      return {
+        s: Ray(hitRecord.p, reflected
+            .add(Vec3.rand().mul(f))),
+          //randomFuzzyness
+        a,
+      }
     }
   }
 }
@@ -270,16 +274,14 @@ var camera = new Camera();
 
 
 //BUILD SCENE
-var SPREADX = 6;
-var SPREADY = 4;
 
 var world = [
   //background
-  Sphere(
+/*  Sphere(
     new Vec3(8, 0, -20), 15,
     Metal(cloudColor(), 0.05)
   ),
-
+/*
   //white blobs
   Sphere(
     new Vec3(Math.random() * SPREADX, Math.random() * SPREADY, -4 - Math.random() / 4),
@@ -303,17 +305,17 @@ var world = [
     new Vec3(Math.random() * 800, Math.random() * 800, 800),
     400,
     Metal(new Vec3(1, 0, 0), 0.1)
-  ),
+  ),*/
 ];
 
-for (var z = 0; z < 40; z++) {
+for (var z = 0; z < 80; z++) {
   world.push(
     Sphere(
-      new Vec3(Math.random() * SPREADX, Math.random() * SPREADY, -4 - Math.random() / 4),
+      new Vec3(Math.random() * SPREADX, Math.random() * SPREADY, -4 + Math.random() * 8),
       0.3 + Math.random() * 0.2,
       z < 12 ?
-        Lambertian(cloudColor()) :
-        Metal(cloudColor(), 0.5 * Math.random())
+        Lambertian(new Vec3(1, 0, 0)) :
+        Metal(cloudColor(), 0.3 * Math.random())
     )
   );
 }
@@ -322,12 +324,12 @@ for (var z = 0; z < 40; z++) {
 
 var offset = 0;
 var y = 0;
-var nrOfSamples = 8;
+var nrOfSamples = 1;
 
 setInterval(() => {
   for (var a = 0; a < IMAGE_WIDTH * 8; a++) {
     var i = offset % IMAGE_WIDTH;
-    var j = y % IMAGE_HEIGHT;
+    var j = y;
     var col = vecZero;
 
     for (let y = 0; y < nrOfSamples; y++) {
@@ -352,7 +354,6 @@ setInterval(() => {
       offset = 0;
       y = 0;
     }
-
   }
 
   c.putImageData(image, 0, 0);
