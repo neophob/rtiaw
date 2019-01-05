@@ -434,7 +434,7 @@ function makeCloudScene() {
     new Sphere(
       new Vec3(Math.random() * 800  , Math.random() * 800, 800),
       400,
-      new Metal(new Vec3(0.9, 0.2, 0.2), 0.1)
+      new Metal(new Vec3(1, 0, 0), 0.2)
       )
   );
 

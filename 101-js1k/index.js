@@ -168,7 +168,6 @@ class Camera {
   constructor() {
     var halfHeight = Math.tan(CAMERA_VERTICAL_FIELD_OF_VIEW * Math.PI / 180 / 2);
     var halfWidth = IMAGE_WIDTH / IMAGE_HEIGHT * halfHeight;
-    this.r = CAMERA_APERTURE / 2;
     this.w = CAMERA_LOOK_FROM.sub(CAMERA_LOOK_AT).uv();
     this.u = CAMERA_LOOK_UP.cross(this.w).uv();
     this.v = this.w.cross(this.u);
@@ -190,7 +189,7 @@ class Camera {
         .sub(new Vec3(1, 1, 0));
     } while (rd.dot(rd) >= 1);
 
-    rd = rd.mul(this.r);
+    rd = rd.mul(CAMERA_APERTURE / 2);
     var offset = this.u
       .mul(rd.x)
       .add(this.v.mul(rd.y))
@@ -232,20 +231,16 @@ function Lambertian(a) {
 }
 
 function color(ray, depth) {
-  function hit(ray, tmin, tmax) {
-    var hitAnything = false;
-    var closestSoFar = tmax;
-    world.forEach((entry) => {
-      var result = entry.hit(ray, tmin, closestSoFar);
-      if (result) {
-        hitAnything = result;
-        closestSoFar = result.t;
-      }
-    });
-    return hitAnything;
-  }
+  var hitVec;
+  var closestSoFar = Number.MAX_VALUE;
+  world.forEach((entry) => {
+    var result = entry.hit(ray, 0.001, closestSoFar);
+    if (result) {
+      hitVec = result;
+      closestSoFar = result.t;
+    }
+  });
 
-  var hitVec = hit(ray, 0.001, Number.MAX_VALUE);
   if (hitVec) {
     //hit, draw sphere
     var material = hitVec.material.scatter(ray, hitVec);
@@ -257,7 +252,10 @@ function color(ray, depth) {
   }
   //ray not hit, draw background
   var t = 0.5 * (ray.direction.uv().y + 1);
-  return new Vec3(1, 1, 1).mul(1 - t).add(new Vec3(0.5, 0.7, 1).mul(t));
+  return new Vec3(1, 1, 1)
+    .mul(1 - t)
+    .add(new Vec3(0.7, 0.7, 1)
+    .mul(t));
 }
 
 function cloudColor() {
@@ -294,7 +292,6 @@ var world = [
     Metal(new Vec3(1, 1, 1), 0.3 * Math.random())
   ),
 
-
   //reflected red blobs
   Sphere(
     new Vec3(Math.random() * 1000, Math.random() * 1000, 1000),
@@ -303,11 +300,10 @@ var world = [
   ),
 
   Sphere(
-    new Vec3(Math.random() * 800  , Math.random() * 800, 800),
+    new Vec3(Math.random() * 800, Math.random() * 800, 800),
     400,
     Metal(new Vec3(1, 0, 0), 0.1)
   ),
-
 ];
 
 for (var z = 0; z < 40; z++) {
@@ -324,17 +320,17 @@ for (var z = 0; z < 40; z++) {
 
 // BUILD SCENE END
 
-var renderSamples = [];
+var offset = 0;
+var y = 0;
+var nrOfSamples = 8;
 
 setInterval(() => {
   for (var a = 0; a < IMAGE_WIDTH * 8; a++) {
-    var i = (Math.random() * IMAGE_WIDTH) | 0;
-    var j = (Math.random() * IMAGE_HEIGHT) | 0;
+    var i = offset % IMAGE_WIDTH;
+    var j = y % IMAGE_HEIGHT;
     var col = vecZero;
-    var offset = 4 * (i + j * IMAGE_WIDTH);
 
-    renderSamples[offset] = (renderSamples[offset] | 1) * 2;
-    for (let y = 0; y < renderSamples[offset]; y++) {
+    for (let y = 0; y < nrOfSamples; y++) {
       col = col.add(color(camera.getRay(
         i / IMAGE_WIDTH,
         j / IMAGE_HEIGHT
@@ -342,11 +338,23 @@ setInterval(() => {
     }
 
     // gamma correction
-    image.data[offset    ] = 255 * Math.sqrt(col.x/renderSamples[offset]);
-    image.data[offset + 1] = 255 * Math.sqrt(col.y/renderSamples[offset]);
-    image.data[offset + 2] = 255 * Math.sqrt(col.z/renderSamples[offset]);
-    image.data[offset + 3] = 255;
+    image.data[4*offset    ] = 255 * Math.sqrt(col.x / nrOfSamples);
+    image.data[4*offset + 1] = 255 * Math.sqrt(col.y / nrOfSamples);
+    image.data[4*offset + 2] = 255 * Math.sqrt(col.z / nrOfSamples);
+    image.data[4*offset + 3] = 255;
+
+    if (offset % IMAGE_WIDTH === 0) {
+      y++;
+    }
+
+    if (offset++ > IMAGE_WIDTH * (IMAGE_HEIGHT-1)) {
+      nrOfSamples *= 2;
+      offset = 0;
+      y = 0;
+    }
+
   }
-  c.putImageData(image,0,0);
+
+  c.putImageData(image, 0, 0);
 }, 0);
 
