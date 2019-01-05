@@ -27,3 +27,8 @@ by Peter Shirley, js edition.
 ![](100-refactoring/14.png?raw=true)
 ![](100-refactoring/15.png?raw=true)
 ![](100-refactoring/16.png?raw=true)
+![](100-refactoring/17.png?raw=true)
+![](100-refactoring/18.png?raw=true)
+![](100-refactoring/19.png?raw=true)
+![](100-refactoring/20.png?raw=true)
+![](100-refactoring/21.png?raw=true)

@@ -1,32 +1,9 @@
 var IMAGE_WIDTH = 800;
 var IMAGE_HEIGHT = 600;
-var NUMBER_OF_SAMPLES = 1;
+var NUMBER_OF_SAMPLES = 10;
 var CAMERA_APERTURE = 0.1;
 
 var image = c.getImageData(0, 0, a.width, a.height);
-
-class HitableList {
-  constructor() {
-    this.e = [];
-  }
-
-  add(entry) {
-    this.e.push(entry);
-  }
-
-  hit(ray, tmin, tmax) {
-    var hitAnything = false;
-    var closestSoFar = tmax;
-    this.e.forEach((entry) => {
-      var result = entry.hit(ray, tmin, closestSoFar);
-      if (result) {
-        hitAnything = result;
-        closestSoFar = result.t;
-      }
-    });
-    return hitAnything;
-  }
-}
 
 function Sphere(vec3Center, radius, material) {
   return {
@@ -250,14 +227,27 @@ function Lambertian(a) {
 
 var vecZero = new Vec3(0, 0, 0);
 
-function color(ray, hitableList, depth) {
-  var hitVec = hitableList.hit(ray, 0.001, Number.MAX_VALUE);
+function color(ray, depth) {
+  function hit(ray, tmin, tmax) {
+    var hitAnything = false;
+    var closestSoFar = tmax;
+    world.forEach((entry) => {
+      var result = entry.hit(ray, tmin, closestSoFar);
+      if (result) {
+        hitAnything = result;
+        closestSoFar = result.t;
+      }
+    });
+    return hitAnything;
+  }
+
+  var hitVec = hit(ray, 0.001, Number.MAX_VALUE);
   if (hitVec) {
     //hit, draw sphere
     var material = hitVec.material.scatter(ray, hitVec);
     if (depth < 50 && material) {
       return material.a
-        .mulVec(color(material.s, hitableList, depth + 1));
+        .mulVec(color(material.s, depth + 1));
     }
     return vecZero;
   }
@@ -292,45 +282,56 @@ var camera = new Camera(
 
 
 //BUILD SCENE
-var hitableList = new HitableList();
 var SPREADX = 6;
 var SPREADY = 4;
-hitableList.add(
+
+var world = [
+  //background
   Sphere(
     new Vec3(8, 0, -20), 15,
-//    new Vec3(0, -1000, 0), 1000,
     Metal(cloudColor(), 0.05)
-  )
-);
+  ),
+
+  //white blobs
+  Sphere(
+    new Vec3(Math.random() * SPREADX, Math.random() * SPREADY, -4 - Math.random() / 4),
+    0.5 + Math.random() * 0.2,
+    Metal(new Vec3(1, 1, 1), 0.3 * Math.random())
+  ),
+  new Sphere(
+    new Vec3(Math.random() * SPREADX, Math.random() * SPREADY, -4 - Math.random() / 4),
+    0.5 + Math.random() * 0.2,
+    Metal(new Vec3(1, 1, 1), 0.3 * Math.random())
+  ),
+
+
+  //reflected red blobs
+  Sphere(
+    new Vec3(Math.random() * 1000, Math.random() * 1000, 1000),
+    500,
+    Metal(new Vec3(1, 0, 0), 0.2)
+  ),
+
+  Sphere(
+    new Vec3(Math.random() * 800  , Math.random() * 800, 800),
+    400,
+    Metal(new Vec3(1, 0, 0), 0.1)
+  ),
+
+];
 
 for (var z = 0; z < 40; z++) {
-  hitableList.add(
+  world.push(
     Sphere(
       new Vec3(Math.random() * SPREADX, Math.random() * SPREADY, -4 - Math.random() / 4),
       0.3 + Math.random() * 0.2,
-      z < 8 ?
-        new Lambertian(new Vec3(1, 0, 0)) :
-        a < 16 ?
-          new Lambertian(cloudColor()) :
-          new Metal(cloudColor(), 0.5 * Math.random())
+      z < 12 ?
+        Lambertian(cloudColor()) :
+        Metal(cloudColor(), 0.5 * Math.random())
     )
   );
 }
 
-hitableList.add(
-  Sphere(
-    new Vec3(Math.random() * SPREADX, Math.random() * SPREADY, -4 - Math.random() / 4),
-    0.5 + Math.random() * 0.2,
-    Metal(new Vec3(1, 1, 1), 0.3 * Math.random())
-  )
-);
-hitableList.add(
-  Sphere(
-    new Vec3(Math.random() * SPREADX, Math.random() * SPREADY, -4 - Math.random() / 4),
-    0.5 + Math.random() * 0.2,
-    Metal(new Vec3(1, 1, 1), 0.3 * Math.random())
-  )
-);
 // BUILD SCENE END
 
 var offset = 0;
@@ -342,7 +343,7 @@ for (var j = IMAGE_HEIGHT - 1; j >= 0; j--) {
       col = col.add(color(camera.getRay(
         (i + Math.random()) / IMAGE_WIDTH,
         (j + Math.random()) / IMAGE_HEIGHT
-      ), hitableList, 0));
+      ), 0));
     }
 
     // gamma correction
