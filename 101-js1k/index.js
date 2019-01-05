@@ -152,26 +152,25 @@ var SPREADY = 4;
 
 var image = c.getImageData(0, 0, IMAGE_WIDTH, IMAGE_HEIGHT);
 var vecZero = new Vec3(0, 0, 0);
-var CAMERA_APERTURE = 0.1;
 var CAMERA_LOOK_FROM = new Vec3(0, 0, 10);
 //var CAMERA_LOOK_FROM = new Vec3(-SPREADX, -SPREADY, 10);
-var CAMERA_LOOK_AT = vecZero;
-var CAMERA_LOOK_UP = new Vec3(0, 1, 0);
+//var CAMERA_LOOK_AT = vecZero;
+//var CAMERA_LOOK_UP = new Vec3(0, 1, 0);
 var CAMERA_DISTANCE_TO_FOCUS = 18;
 var CAMERA_VERTICAL_FIELD_OF_VIEW = 16;
 
-var halfHeight = Math.tan(CAMERA_VERTICAL_FIELD_OF_VIEW * Math.PI / 360);
+var halfHeight = CAMERA_DISTANCE_TO_FOCUS * Math.tan(CAMERA_VERTICAL_FIELD_OF_VIEW * Math.PI / 360);
 var halfWidth = IMAGE_WIDTH / IMAGE_HEIGHT * halfHeight;
-var w = CAMERA_LOOK_FROM.sub(CAMERA_LOOK_AT).uv();
-var u = CAMERA_LOOK_UP.cross(w).uv();
+var w = CAMERA_LOOK_FROM.sub(/*CAMERA_LOOK_AT*/vecZero).uv();
+var u = /*CAMERA_LOOK_UP*/new Vec3(0, 1, 0).cross(w).uv();
 var v = w.cross(u);
 var origin = CAMERA_LOOK_FROM;
 var lowerLeftCorner = CAMERA_LOOK_FROM
-  .sub(u.mul(halfWidth * CAMERA_DISTANCE_TO_FOCUS))
-  .sub(v.mul(halfHeight * CAMERA_DISTANCE_TO_FOCUS))
+  .sub(u.mul(halfWidth))
+  .sub(v.mul(halfHeight))
   .sub(w.mul(CAMERA_DISTANCE_TO_FOCUS));
-var horizontal = u.mul(2 * halfWidth * CAMERA_DISTANCE_TO_FOCUS);
-var vertical = v.mul(2 * halfHeight * CAMERA_DISTANCE_TO_FOCUS);
+var horizontal = u.mul(halfWidth * 2);
+var vertical = v.mul(halfHeight * 2);
 
 
 function getRay(s, t) {
@@ -183,7 +182,9 @@ function getRay(s, t) {
       .sub(new Vec3(1, 1, 0));
   } while (rd.dot(rd) >= 1);
 
-  rd = rd.mul(CAMERA_APERTURE / 2);
+  //var CAMERA_APERTURE = 0.1;
+  //rd = rd.mul(CAMERA_APERTURE / 2);
+  rd = rd.mul(.05);
   var offset = u
     .mul(rd.x)
     .add(v.mul(rd.y))
