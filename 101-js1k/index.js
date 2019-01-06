@@ -25,13 +25,13 @@ function Sphere(vec3Center, radius, material) {
         }
         temp = (-b + Math.sqrt(discriminant)) / a;
         if (temp < tmax && temp > tmin) {
-          var p = ray.p(temp);
+          var q = ray.p(temp);
           //return hitRecord
           return {
             material,
             t: temp,
-            p,
-            normal: p
+            p: q,
+            normal: q
               .sub(vec3Center)
               .div(radius),
           }
@@ -139,9 +139,9 @@ class Vec3 {
 
 function Ray(o, d) {
   return {
-    o,  //origin
-    d,  //destination
-    p: (t) => { //pointAtParameter
+    o,  //vec3 origin
+    d,  //vec3 destination
+    p: (t) => { //float pointAtParameter
       return o.add(d.mul(t));
     }
   }
@@ -187,41 +187,39 @@ function getRay(s, t) {
   rd = rd.mul(.05);
   var offset = u
     .mul(rd.x)
-    .add(v.mul(rd.y))
+    .add(v.mul(rd.y));
+
   var vecDirection = lowerLeftCorner
     .add(horizontal.mul(s))
     .add(vertical.mul(t))
     .sub(origin)
     .sub(offset);
+
   return Ray(origin.add(offset), vecDirection);
 }
 
 
 function Metal(a, f) {
-  return {
-    scatter: (rayIn, hitRecord) => {
-      var reflected = rayIn.d.uv().sub(hitRecord.normal.mul(2 * rayIn.d.uv().dot(hitRecord.normal)));
-      return {
-        s: Ray(hitRecord.p, reflected
-            .add(Vec3.rand().mul(f))),
-          //randomFuzzyness
-        a,
-      }
+  return (rayIn, hitRecord) => {
+    var reflected = rayIn.d.uv().sub(hitRecord.normal.mul(2 * rayIn.d.uv().dot(hitRecord.normal)));
+    return {
+      s: Ray(hitRecord.p, reflected
+          .add(Vec3.rand().mul(f))),
+        //randomFuzzyness
+      a,
     }
   }
 }
 
 function Lambertian(a) {
-  return {
-    scatter: (rayIn, hitRecord) => {
-        var target = hitRecord.p
-        .add(hitRecord.normal)
-        .add(Vec3.rand());
+  return (rayIn, hitRecord) => {
+    var target = hitRecord.p
+      .add(hitRecord.normal)
+      .add(Vec3.rand());
 
-      return {
-        s: Ray(hitRecord.p, target.sub(hitRecord.p)),
-        a,
-      }
+    return {
+      s: Ray(hitRecord.p, target.sub(hitRecord.p)),
+      a,
     }
   }
 }
@@ -239,7 +237,7 @@ function color(ray, depth) {
 
   if (hitVec) {
     //hit, draw sphere
-    var material = hitVec.material.scatter(ray, hitVec);
+    var material = hitVec.material(ray, hitVec);
     if (depth < 50 && material) {
       return material.a
         .mulVec(color(material.s, depth + 1));
@@ -338,7 +336,7 @@ setInterval(() => {
       y++;
     }
 
-    if (offset++ > IMAGE_WIDTH * (IMAGE_HEIGHT-1)) {
+    if (offset++ > IMAGE_WIDTH * (IMAGE_HEIGHT - 1)) {
       nrOfSamples *= 2;
       offset = 0;
       y = 0;

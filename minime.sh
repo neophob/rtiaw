@@ -7,7 +7,7 @@ TERSER=./node_modules/.bin/terser
 OUT=./dist
 
 BABELMINIFY_OPT="--builtIns false --mangle.topLevel true --typeConstructors false --numericLiterals true --simplifyComparisons true"
-TERSER_OPT="-c -m --ecma 6 --warn --toplevel"
+TERSER_OPT="-c toplevel=true,passes=1,ecma=6 -m --warn --toplevel"
 
 REGPACK_OPT0="- --useES6 true --reassignVars true --hash2DContext true --contextVariableName c --crushGainFactor 2 --crushLengthFactor 1 --crushCopiesFactor 0 --crushTiebreakerFactor 0"
 REGPACK_OPT1="- --useES6 true --reassignVars true --hash2DContext true --contextVariableName c --crushGainFactor 5 --crushLengthFactor 1 --crushCopiesFactor 0 --crushTiebreakerFactor 0"
@@ -44,12 +44,12 @@ REGPACK_PACK() {
 echo "[MINIME] START"
 rm -f $OUT/*
 
-$BABILI 101-js1k/index.js $BABELMINIFY_OPT > $OUT/in.tmp
+#$BABILI 101-js1k/index.js $BABELMINIFY_OPT > $OUT/in.tmp
 $TERSER 101-js1k/index.js $TERSER_OPT > $OUT/in-terser.tmp
 
 
 # remove trailing ;
-sed 's/.$//' $OUT/in.tmp | tee $OUT/in
+#sed 's/.$//' $OUT/in.tmp | tee $OUT/in
 sed 's/.$//' $OUT/in-terser.tmp | tee $OUT/in-terser
 #BAB_PACK "$REGPACK_OPT1" 1
 #BAB_PACK "$REGPACK_OPT2" 2
@@ -66,7 +66,7 @@ sed 's/.$//' $OUT/in-terser.tmp | tee $OUT/in-terser
 #BAB_PACK "$REGPACK_OPTD" D
 #BAB_PACK "$REGPACK_OPTE" E
 #BAB_PACK "$REGPACK_OPTF" F
-BAB_PACK "$REGPACK_OPTX" X
+#BAB_PACK "$REGPACK_OPTX" X
 
   $REGPACK $OUT/in-terser $REGPACK_OPTX > $OUT/js1k-terser-regpacked-X.js 2>/dev/null
   printf %s "$(cat $OUT/js1k-terser-regpacked-X.js)" > $OUT/js1k-terser-regpacked-X-no-newlines.js
